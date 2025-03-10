@@ -1,20 +1,30 @@
-# 🤖 GPT-Based Smart Assistant - Riya
+# 🤖 GPT-Based Smart Assistant - Riya  
 
-🚀 A Generative AI-powered assistant developed during the Generative AI Mega Workshop hosted by Nxtwave for CCBP 4.0 Academy students.
+🚀 **Riya** is an AI-powered virtual assistant designed to answer queries and engage in informal conversations. Built during the **Generative AI Mega Workshop** at **Nxtwave CCBP 4.0 Academy**, this project integrates multiple AI models to deliver **seamless** and **interactive** user experiences.  
 
-🔗 [Live Demo](https://adithyaaigen.ccbp.tech/)
+🔗 **Live Demo:** [Riya - AI Assistant](https://adithyaaigen.ccbp.tech/)  
 
-## 🌟 Features
-✅ AI assistant capable of responding to queries
-✅ Engages in informal conversations
-✅ Integrates multiple AI technologies for seamless interaction
+---
 
-## 🛠 Tech Stack
-- Google Colab
-- OpenAI
-- Lang Chain
-- Gradio
-- PlayHT
-- Hugging Face
+## 🌟 Features  
 
-📌 **More features coming soon!**
+✅ **AI-Powered Conversations** – Uses OpenAI's GPT to generate responses.  
+✅ **Text-to-Speech Support** – Converts AI-generated text into natural speech.  
+✅ **User-Friendly UI** – Developed with Gradio for easy interaction.  
+✅ **Multiple AI Integrations** – Leverages OpenAI, LangChain, and Hugging Face.  
+
+---
+
+## 🛠 Tech Stack  
+
+🔹 **Google Colab** – Cloud-based Python development.  
+🔹 **OpenAI API** – Powers the AI chatbot responses.  
+🔹 **LangChain** – Enhances AI conversation flow.  
+🔹 **Gradio** – Creates an interactive user interface.  
+🔹 **PlayHT** – Text-to-speech functionality.  
+🔹 **Hugging Face** – Accesses pre-trained AI models.  
+
+---
+
+## 📂 Folder Structure  
+
