@@ -8,9 +8,9 @@ function postToSocialMedia(classList) {
     )}`;
         window.open(url);
     } else if (classList.contains("linkedin")) {
-        const url = `https://www.linkedin.com/share?text=${encodeURIComponent(
-      content
-    )}`;
+           const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+     window.location.href
+   )}`;
         window.open(url);
     } else if (classList.contains("whatsapp")) {
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(content)}`);
@@ -33,8 +33,7 @@ const skillIcon = document.getElementsByClassName("tooltip");
 const addEventListenersToSkillIcon = () => {
     for (let i = 0; i < skillIcon.length; i++) {
         skillIcon[i].addEventListener("click", (e) => {
-            console.log(e.target)
-            updateDescription(e.target.id);
+            updateDescription(skillIcon[i].id);
         });
     }
 };
