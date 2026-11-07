@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Riya · Smart Assistant (v2)
 
-## Getting Started
+A rebuild of my 2023 NxtWave workshop chatbot (Gradio + LangChain on Colab) as a
+production-style web app: streaming responses, tool calling, input validation,
+tests and CI.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+| Layer | Choice |
+|---|---|
+| App | Next.js 16 (App Router) + TypeScript |
+| UI | Tailwind CSS v4 |
+| LLM | Vercel AI SDK 7 (`streamText`, `useChat`, tools) |
+| Models | Vercel AI Gateway (any `provider/model` via `CHAT_MODEL`) |
+| Data | Supabase Postgres + Auth + pgvector (schema in `supabase/migrations`) |
+| Tests / CI | Vitest, GitHub Actions (lint, typecheck, test, build) |
+
+## Architecture
+
+```
+Browser (useChat) ──POST /api/chat──▶ Route handler
+                                       ├─ Zod validation (roles, size, count)
+                                       ├─ streamText(system prompt + tools)
+                                       └─ AI Gateway ──▶ model provider
+        ◀── streamed UI message parts ──┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Getting started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+cp .env.example .env.local   # add AI_GATEWAY_API_KEY
+npm run dev                  # http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script | What it does |
+|---|---|
+| `npm run dev` | Start the dev server |
+| `npm test` | Unit tests (Vitest) |
+| `npm run typecheck` | TypeScript check |
+| `npm run lint` | ESLint |
+| `npm run build` | Production build |
 
-## Learn More
+## What changed from v1
 
-To learn more about Next.js, take a look at the following resources:
+- Each browser keeps its own conversation (v1 shared one global memory across all users).
+- Token streaming, a stop button and retry on errors.
+- The server validates requests: no client-supplied system prompts, and caps on
+  message count and length.
+- The model can be swapped with an env var; no provider lock-in.
+- Tool calling (`getCurrentTime` to start).
+- Tests and CI on every push.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Roadmap
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [x] **Phase 1:** streaming chat, tools, validation, tests, CI
+- [ ] **Phase 2:** Supabase Auth + saved threads (schema ready in `supabase/migrations/0001_init.sql`)
+- [ ] **Phase 3:** RAG: upload PDFs → chunk → embed → pgvector search with citations
+- [ ] **Phase 4:** voice in (speech-to-text) and out (text-to-speech)
+- [ ] **Phase 5:** rate limiting, Langfuse tracing, an eval set, Playwright end-to-end tests
