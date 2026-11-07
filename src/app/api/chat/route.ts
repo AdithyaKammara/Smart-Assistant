@@ -5,7 +5,8 @@ import {
   streamText,
   toUIMessageStream,
 } from "ai";
-import { CHAT_MODEL, LIMITS, SYSTEM_PROMPT } from "@/lib/ai/config";
+import { LIMITS, SYSTEM_PROMPT } from "@/lib/ai/config";
+import { getChatModel } from "@/lib/ai/model";
 import { tools } from "@/lib/ai/tools";
 import { parseChatRequest } from "@/lib/validation";
 
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   const result = streamText({
-    model: CHAT_MODEL,
+    model: getChatModel(),
     system: SYSTEM_PROMPT,
     messages: await convertToModelMessages(parsed.messages),
     tools,

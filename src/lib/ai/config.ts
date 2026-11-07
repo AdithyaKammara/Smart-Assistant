@@ -1,9 +1,7 @@
 /**
- * Central AI configuration. The model is a plain "provider/model" string routed
- * through the Vercel AI Gateway, so switching providers is an env change, not a
- * code change.
+ * Central AI configuration. The model itself is chosen in ./model.ts from
+ * whichever provider key is set, so switching providers is an env change.
  */
-export const CHAT_MODEL = process.env.CHAT_MODEL ?? "anthropic/claude-sonnet-5.5";
 
 /** Hard limits that keep one request from running up cost or latency. */
 export const LIMITS = {

@@ -11,7 +11,7 @@ tests and CI.
 | App | Next.js 16 (App Router) + TypeScript |
 | UI | Tailwind CSS v4 |
 | LLM | Vercel AI SDK 7 (`streamText`, `useChat`, tools) |
-| Models | Vercel AI Gateway (any `provider/model` via `CHAT_MODEL`) |
+| Models | Google Gemini or Groq (free tiers), or Vercel AI Gateway, chosen by which key is set |
 | Data | Supabase Postgres + Auth + pgvector (schema in `supabase/migrations`) |
 | Tests / CI | Vitest, GitHub Actions (lint, typecheck, test, build) |
 
@@ -21,7 +21,7 @@ tests and CI.
 Browser (useChat) ──POST /api/chat──▶ Route handler
                                        ├─ Zod validation (roles, size, count)
                                        ├─ streamText(system prompt + tools)
-                                       └─ AI Gateway ──▶ model provider
+                                       └─ Gemini / Groq / AI Gateway
         ◀── streamed UI message parts ──┘
 ```
 
@@ -29,9 +29,18 @@ Browser (useChat) ──POST /api/chat──▶ Route handler
 
 ```bash
 npm install
-cp .env.example .env.local   # add AI_GATEWAY_API_KEY
+cp .env.example .env.local   # add ONE provider key (see below)
 npm run dev                  # http://localhost:3000
 ```
+
+| Provider | Key variable | Free, no card? | Get a key |
+|---|---|---|---|
+| Google Gemini (default model `gemini-3.5-flash`) | `GOOGLE_GENERATIVE_AI_API_KEY` | Yes | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+| Groq (default model `openai/gpt-oss-120b`) | `GROQ_API_KEY` | Yes | [console.groq.com/keys](https://console.groq.com/keys) |
+| Vercel AI Gateway | `AI_GATEWAY_API_KEY` | Needs a card | [vercel.com/ai-gateway](https://vercel.com/ai-gateway) |
+
+The app uses the first key it finds in that order. Set `CHAT_PROVIDER` or
+`CHAT_MODEL` to override.
 
 | Script | What it does |
 |---|---|
