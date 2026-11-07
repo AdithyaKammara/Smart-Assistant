@@ -2,6 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { useEffect, useRef, useState } from "react";
+import { Markdown } from "./markdown";
 
 const SUGGESTIONS = [
   "What can you help me with?",
@@ -70,7 +71,9 @@ export function Chat() {
                   {message.parts.map((part, i) => {
                     const key = `${message.id}-${i}`;
                     if (part.type === "text") {
-                      return (
+                      return message.role === "assistant" ? (
+                        <Markdown key={key}>{part.text}</Markdown>
+                      ) : (
                         <p key={key} className="whitespace-pre-wrap leading-relaxed">
                           {part.text}
                         </p>
