@@ -1,45 +1,98 @@
+/* Hallmark · shape: app screen · genre: atmospheric · theme: Ribbon (deal 3/3, seed personal-assistant-chat-tool-c0a5·d566ef74·2026-11-07·r0) · redesign: full
+ * nav: top bar, wordmark only (kept) · signature: the transcript, Riya's replies set as reading text on hairlines under a machined composer · states: empty, thinking, streaming, error, full · ribbon: dawn (light), two-in-the-morning (dark)
+ * axes: light/grotesk-sans/chromatic-teal · posture: committed · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H3 E4 S4 R4 V4 · weakest: H (no hero on an app screen), the empty state carries the first screen with one display line and the composer */
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@import "./tokens.css";
+@import "./base.css" layer(base);
 
+/* Fonts come from next/font (layout.tsx) as variables; the tokens point at them. */
 :root {
-  --background: #ffffff;
-  --foreground: #18181b;
-  --surface: #f4f4f5;
-  --border: #e4e4e7;
-  --muted: #71717a;
-  --accent: #4f46e5;
-  --accent-foreground: #ffffff;
-  --danger: #dc2626;
+  --font-display: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-outlier: var(--font-jetbrains), ui-monospace, monospace;
+  --edge-lit: inset 0 1px 0 oklch(100% 0 0 / 0.25);
 }
 
+/* Ribbon · two-in-the-morning: the dark colourway. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0b0b0f;
-    --foreground: #ededed;
-    --surface: #1c1c22;
-    --border: #2a2a33;
-    --muted: #a1a1aa;
-    --accent: #818cf8;
-    --accent-foreground: #0b0b0f;
-    --danger: #f87171;
+    color-scheme: dark;
+    --color-paper: oklch(13.2% 0.022 258); --color-paper-2: oklch(16.4% 0.022 258); --color-paper-3: oklch(19.5% 0.022 258);
+    --color-ink: oklch(93.5% 0.012 85); --color-ink-2: oklch(86% 0.014 85); --color-muted: oklch(72% 0.02 255);
+    --color-rule: oklch(27% 0.02 258); --color-rule-2: oklch(22% 0.02 258);
+    --color-accent: oklch(82% 0.095 68); --color-accent-soft: oklch(30% 0.04 68); --color-accent-ink: oklch(20% 0.03 62); --color-focus: oklch(82% 0.095 68);
+    --color-error: oklch(72% 0.15 27);
+    --metal-hi: oklch(44% 0.012 255); --metal-lo: oklch(25% 0.014 255);
+    --edge-light: inset 0 1px 0 oklch(100% 0 0 / 0.07);
+    --shadow-part: 0 1px 0 oklch(0% 0 0 / 0.5), 0 10px 18px -6px oklch(0% 0 0 / 0.6);
+    --shadow-panel: 0 1px 0 oklch(0% 0 0 / 0.4), 0 24px 48px -16px oklch(0% 0 0 / 0.7);
   }
 }
 
+/* Tailwind names used by the components, mapped onto the tokens. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-  --color-border: var(--border);
-  --color-muted: var(--muted);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-danger: var(--danger);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-surface: var(--color-paper-2);
+  --color-border: var(--color-rule);
+  --color-muted: var(--color-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-foreground: var(--color-accent-ink);
+  --color-danger: var(--color-error);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-outlier);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+/* Machined parts, lit from above (Ribbon § Controls). */
+.part {
+  min-height: 44px;
+  padding: 0 var(--space-md);
+  border: var(--rule-hair) solid var(--color-rule);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(var(--color-paper-2), var(--color-paper-3));
+  box-shadow: var(--edge-light), var(--shadow-part);
+  color: var(--color-ink);
+  font: 500 var(--text-sm) / 1 var(--font-body);
+  cursor: pointer;
+  transition: transform var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
 }
+.part:hover { border-color: var(--color-muted); }
+.part:active { transform: translateY(1px); }
+.part:disabled { cursor: not-allowed; opacity: 0.45; transform: none; }
+.part--lit { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-accent-ink); box-shadow: var(--edge-lit), var(--shadow-part); }
+.part--lit:hover { border-color: var(--color-accent); filter: brightness(1.06); }
+
+.panel {
+  border-radius: var(--radius-card);
+  background: linear-gradient(var(--color-paper-2), var(--color-paper-3));
+  box-shadow: var(--edge-light), var(--shadow-panel);
+}
+
+/* Riya's replies: Tailwind Typography, coloured by the tokens in both modes. */
+.reply {
+  --tw-prose-body: var(--color-ink-2);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-links: var(--color-ink);
+  --tw-prose-code: var(--color-ink);
+  --tw-prose-pre-code: var(--color-ink);
+  --tw-prose-pre-bg: var(--color-paper-2);
+  --tw-prose-bullets: var(--color-muted);
+  --tw-prose-counters: var(--color-muted);
+  --tw-prose-quotes: var(--color-ink-2);
+  --tw-prose-quote-borders: var(--color-rule);
+  --tw-prose-hr: var(--color-rule);
+  --tw-prose-th-borders: var(--color-rule);
+  --tw-prose-td-borders: var(--color-rule-2);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+.reply :where(h1, h2, h3, h4) { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em; }
+.reply :where(pre) { border: var(--rule-hair) solid var(--color-rule); border-radius: var(--radius-part); }
+.reply :where(code) { font-family: var(--font-outlier); }
+.reply :where(code):not(pre code)::before, .reply :where(code):not(pre code)::after { content: none; }
+.reply a { text-decoration-color: var(--color-muted); }
+.reply a:hover { text-decoration-color: var(--color-accent); }
