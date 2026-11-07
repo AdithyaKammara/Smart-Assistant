@@ -9,6 +9,8 @@ export const CHAT_MODEL = process.env.CHAT_MODEL ?? "anthropic/claude-sonnet-5.5
 export const LIMITS = {
   maxMessages: 50,
   maxCharsPerMessage: 8_000,
+  maxPartsPerMessage: 20,
+  maxRequestChars: 200_000,
   maxToolSteps: 3,
 } as const;
 
