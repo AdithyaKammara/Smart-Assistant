@@ -1,5 +1,6 @@
-import { Chat } from "@/components/chat";
+import { redirect } from "next/navigation";
 
+/** Every visit to / starts a fresh chat; the thread row is created with its first message. */
 export default function Home() {
-  return <Chat />;
+  redirect(`/chat/${crypto.randomUUID()}`);
 }

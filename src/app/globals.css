@@ -65,6 +65,20 @@
 .part--lit { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-accent-ink); box-shadow: var(--edge-lit), var(--shadow-part); }
 .part--lit:hover { border-color: var(--color-accent); filter: brightness(1.06); }
 
+.field {
+  min-height: 44px;
+  padding: 0 var(--space-sm);
+  border: var(--rule-hair) solid var(--color-rule);
+  border-radius: var(--radius-part);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: 400 var(--text-md) / 1.4 var(--font-body);
+  transition: border-color var(--dur-micro) var(--ease-out);
+}
+.field:hover { border-color: var(--color-muted); }
+.field:focus { border-color: var(--color-accent); outline: none; }
+.field:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
 .panel {
   border-radius: var(--radius-card);
   background: linear-gradient(var(--color-paper-2), var(--color-paper-3));
