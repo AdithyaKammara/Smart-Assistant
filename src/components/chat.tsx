@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import type { ThreadSummary } from "@/lib/chat-store";
+import { hasContent, type ThreadSummary } from "@/lib/chat-store";
 import { Markdown } from "./markdown";
 import { Sidebar, type DocumentSummary } from "./sidebar";
 import { useDocuments } from "./use-documents";
@@ -122,7 +122,7 @@ export function Chat({ id, initialMessages, threads, documents, email, model }: 
       )}
 
       <div className="relative flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center gap-3 bg-sidebar/80 px-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:px-6">
+        <header className="flex h-16 shrink-0 items-center gap-3 bg-sidebar/80 px-4 shadow-[var(--shadow-bar)] backdrop-blur-xl sm:px-6">
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
@@ -135,7 +135,7 @@ export function Chat({ id, initialMessages, threads, documents, email, model }: 
             {title}
           </h1>
           <div className="hidden h-4 w-px bg-surface-highest sm:block" />
-          <p className="hidden items-center gap-1.5 rounded-full bg-surface-low px-2.5 py-1 text-xs font-medium text-foreground shadow-[0_0_0_1px_rgba(255,255,255,0.08)] sm:flex">
+          <p className="hidden items-center gap-1.5 rounded-full bg-surface-low px-2.5 py-1 text-xs font-medium text-foreground shadow-[var(--ring-hair)] sm:flex">
             <span className="sr-only">Model:</span>
             {model}
           </p>
@@ -170,7 +170,7 @@ export function Chat({ id, initialMessages, threads, documents, email, model }: 
                 </div>
               </section>
             ) : (
-              messages.map((message) =>
+              messages.filter((m) => m.role === "user" || hasContent(m) || m.id === messages.at(-1)?.id).map((message) =>
                 message.role === "user" ? (
                   <article key={message.id} className="flex w-full flex-col items-end gap-1.5 self-end">
                     <span className="pr-1 text-[13px] font-semibold text-foreground">You</span>
@@ -239,7 +239,7 @@ export function Chat({ id, initialMessages, threads, documents, email, model }: 
                   send(input);
                 }
               }}
-              placeholder={dictation.listening ? "Listening…" : "Message Riya or attach a PDF to ask about it…"}
+              placeholder={dictation.listening ? "Listening…" : "Message Riya…"}
               className="max-h-[168px] w-full resize-none bg-transparent px-2 py-2 text-[15px] leading-6 text-foreground outline-none placeholder:text-muted"
             />
             <div className="flex items-center justify-between gap-2">

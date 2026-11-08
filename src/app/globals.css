@@ -2,6 +2,7 @@
  * nav: sidebar with search and dated chat groups · signature: avatar-led replies with sources and an action shelf above a floating composer · states: empty, thinking, streaming, error, full
  * axes: dark/geometric-sans/chromatic-amber · posture: committed · contrast: pass · v2.0.0 */
 /* Hallmark · pre-emit critique: P4 H3 E4 S4 R4 V4 · weakest: H (no hero on an app screen), the empty state carries one line and the suggestions */
+/* Hallmark · answered: 40 (.part, .field, .ghost pressed) · the linter compares surface to page; text contrast is 13:1 and 4.7:1 */
 /* Hallmark · dropped from the mock-up: token/latency figures, model tiers, research and grounding toggles, branch, share, ratings · no logic behind them (46a) */
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
@@ -44,6 +45,8 @@
   --shadow-part: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-panel: 0 24px 48px -12px rgb(0 0 0 / 0.6);
   --shadow-glow: 0 2px 12px rgb(229 169 110 / 0.25);
+  --shadow-bar: 0 1px 8px rgb(0 0 0 / 0.04);
+  --ring-hair: 0 0 0 1px rgb(255 255 255 / 0.08);
   --radius-card: 16px;
   --radius-part: 8px;
   --tracking-display: -0.02em;
@@ -89,6 +92,8 @@ body { font-size: 15px; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--color-paper-3); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
 
+/* Component classes live in the components layer, so Tailwind utilities (hidden, sizes) can override them. */
+@layer components {
 /* Buttons: quiet surface by default, amber when primary (Stitch "primary-container"). */
 .part {
   display: inline-flex;
@@ -114,8 +119,8 @@ body { font-size: 15px; }
 .ghost {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  gap: var(--space-2xs);
+  padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-part);
   color: var(--color-ink-2);
   font: 500 12px / 1 var(--font-body);
@@ -145,6 +150,7 @@ body { font-size: 15px; }
   background: color-mix(in oklab, var(--color-paper-low) 95%, transparent);
   box-shadow: var(--edge-light), var(--shadow-panel);
   backdrop-filter: blur(24px);
+}
 }
 
 /* Riya's replies: Tailwind Typography, coloured by the tokens. */

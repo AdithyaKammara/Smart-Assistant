@@ -130,8 +130,8 @@ export function Sidebar({ threads, currentId, documents, email, onNavigate }: Pr
       </div>
 
       <form action={signOut} className="flex shrink-0 items-center gap-2 bg-surface-low p-3">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-bright font-display text-sm font-semibold uppercase text-accent-foreground">
-          {email.slice(0, 1) || "?"}
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-bright font-display text-sm font-semibold text-accent-foreground">
+          {email.slice(0, 1).toUpperCase() || "?"}
         </div>
         <span className="min-w-0 flex-1 truncate text-[13px] text-ink-2">{email}</span>
         <button type="submit" aria-label="Sign out" title="Sign out" className="ghost px-2">
