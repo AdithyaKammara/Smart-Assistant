@@ -4,7 +4,7 @@ test.describe("signed out", () => {
   test("any page sends you to sign in", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole("heading", { name: "Sign in to your assistant." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
   });
 
   test("the chat API refuses requests without a session", async ({ request }) => {
@@ -19,7 +19,7 @@ test.describe("signed out", () => {
     // Bypass the browser's own minlength check to reach the server-side validation.
     await page.getByLabel("Password").evaluate((el) => el.removeAttribute("minlength"));
     await page.getByLabel("Password").fill("short");
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByRole("button", { name: "Log in", exact: true }).click();
     // Next adds its own empty role="alert" route announcer, so match on the text.
     await expect(page.getByRole("alert").filter({ hasText: "Passwords are at least 8 characters" })).toBeVisible();
   });
@@ -40,7 +40,7 @@ test.describe("signed in", () => {
     await page.goto("/login");
     await page.getByLabel("Email").fill(process.env.E2E_EMAIL!);
     await page.getByLabel("Password").fill(process.env.E2E_PASSWORD!);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByRole("button", { name: "Log in", exact: true }).click();
     await expect(page).toHaveURL(/\/chat\/[0-9a-f-]{36}$/);
 
     await page.getByLabel("Message").fill("Reply with just the word: pineapple");
@@ -52,4 +52,12 @@ test.describe("signed in", () => {
     await page.reload();
     await expect(page.getByText("Reply with just the word: pineapple")).toBeVisible();
   });
+});
+
+test("the sign-up link switches the form to create an account", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByRole("button", { name: "Sign up" }).click();
+  await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign up", exact: true })).toHaveAttribute("type", "submit");
+  await page.screenshot({ path: `test-results/login-signup-${test.info().project.name}.png` });
 });

@@ -41,6 +41,16 @@
   --color-accent: var(--color-accent);
   --color-accent-foreground: var(--color-accent-ink);
   --color-danger: var(--color-error);
+  /* shadcn/ui names (components/ui), mapped onto the same Ribbon tokens */
+  --color-primary: var(--color-accent);
+  --color-primary-foreground: var(--color-accent-ink);
+  --color-secondary: var(--color-paper-2);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted-foreground: var(--color-muted);
+  --color-destructive: var(--color-error);
+  --color-destructive-foreground: var(--color-paper);
+  --color-input: var(--color-rule);
+  --color-ring: var(--color-focus);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
   --font-mono: var(--font-outlier);
