@@ -8,6 +8,7 @@ export const EMBEDDING_DIMENSIONS = 1536; // must match vector(1536) in the migr
 export const RAG_LIMITS = {
   maxFileBytes: 10 * 1024 * 1024,
   maxPages: 300,
+  extractTimeoutMs: 20_000,
   maxChunks: 400,
   chunkChars: 1200,
   overlapChars: 200,
@@ -71,13 +72,38 @@ export async function extractPdfText(bytes: Uint8Array): Promise<string> {
   const pdf = await getDocumentProxy(bytes);
   if (pdf.numPages > RAG_LIMITS.maxPages) throw new PdfTooLargeError(`PDFs can have up to ${RAG_LIMITS.maxPages} pages`);
 
+  // Budget checked inside each page's text stream, so one huge page cannot be read in full.
+  // ponytail: in-process with a deadline; move to a worker with a memory limit if uploads become hostile at scale.
+  const deadline = Date.now() + RAG_LIMITS.extractTimeoutMs;
   let text = "";
-  for (let n = 1; n <= pdf.numPages && text.length < RAG_LIMITS.maxTextChars; n++) {
-    const page = await pdf.getPage(n);
-    const content = await page.getTextContent();
-    text += content.items.map((item) => ("str" in item ? item.str : "")).join(" ") + "\n\n";
-    page.cleanup();
+  try {
+    for (let n = 1; n <= pdf.numPages && text.length < RAG_LIMITS.maxTextChars; n++) {
+      const page = await pdf.getPage(n);
+      const reader = page.streamTextContent().getReader();
+      let finished = false;
+      try {
+        while (text.length < RAG_LIMITS.maxTextChars) {
+          if (Date.now() > deadline) throw new PdfTooLargeError("That PDF took too long to read");
+          const { done, value } = await reader.read();
+          if (done) {
+            finished = true;
+            break;
+          }
+          for (const item of (value as { items: { str?: string }[] }).items) {
+            text += (item.str ?? "") + " ";
+            if (text.length >= RAG_LIMITS.maxTextChars) break;
+          }
+        }
+      } finally {
+        // Stop pulling: pdf.js streams with backpressure, so unread text is not produced.
+        // (reader.cancel() makes pdf.js 6 throw an unhandled "controller already closed".)
+        if (!finished) reader.releaseLock();
+        page.cleanup();
+      }
+      text += "\n\n";
+    }
+  } finally {
+    await pdf.cleanup();
   }
-  await pdf.cleanup();
   return text.slice(0, RAG_LIMITS.maxTextChars);
 }
