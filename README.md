@@ -56,7 +56,7 @@ Browser (useChat, sends only the new message)
 
    | Provider | Key variable | Free, no card? | Get a key |
    |---|---|---|---|
-   | Google Gemini (`gemini-3.5-flash`) | `GOOGLE_GENERATIVE_AI_API_KEY` | Yes | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+   | Google Gemini (`gemini-3.5-flash-lite`) | `GOOGLE_GENERATIVE_AI_API_KEY` | Yes | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
    | Groq (`openai/gpt-oss-120b`) | `GROQ_API_KEY` | Yes | [console.groq.com/keys](https://console.groq.com/keys) |
    | Vercel AI Gateway | `AI_GATEWAY_API_KEY` | Needs a card | [vercel.com/ai-gateway](https://vercel.com/ai-gateway) |
 

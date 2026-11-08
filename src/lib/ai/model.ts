@@ -6,7 +6,7 @@ export type Provider = "google" | "groq" | "gateway";
 
 /** Default model per provider; override any of them with CHAT_MODEL. */
 export const DEFAULT_MODELS: Record<Provider, string> = {
-  google: "gemini-3.5-flash",
+  google: "gemini-3.5-flash-lite", // far higher free daily limit than full flash; CHAT_MODEL=gemini-3.5-flash for more quality
   groq: "openai/gpt-oss-120b",
   gateway: "anthropic/claude-sonnet-5.5",
 };

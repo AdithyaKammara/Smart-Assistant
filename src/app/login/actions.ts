@@ -24,7 +24,7 @@ export async function authenticate(_prev: AuthState, form: FormData): Promise<Au
     const { error } = await supabase.auth.signInWithPassword(parsed.data);
     if (error) return { error: error.message };
   }
-  redirect("/");
+  redirect(`/chat/${crypto.randomUUID()}`); // straight to a fresh chat, so the URL is shareable and reload-safe
 }
 
 export async function signOut() {

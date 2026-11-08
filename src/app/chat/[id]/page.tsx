@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { z } from "zod";
 import { Chat } from "@/components/chat";
@@ -14,6 +15,7 @@ export default function ChatPage({ params }: PageProps<"/chat/[id]">) {
 }
 
 async function ChatLoader({ params }: { params: PageProps<"/chat/[id]">["params"] }) {
+  await connection(); // per-user data: render at request time, never prerender
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
 

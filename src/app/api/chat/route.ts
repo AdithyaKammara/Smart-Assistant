@@ -8,6 +8,7 @@ import {
   validateUIMessages,
 } from "ai";
 import { LIMITS, SYSTEM_PROMPT } from "@/lib/ai/config";
+import { friendlyError } from "@/lib/ai/errors";
 import { getChatModel } from "@/lib/ai/model";
 import { createTools } from "@/lib/ai/tools";
 import { consumeChatQuota, loadMessages, saveChat } from "@/lib/chat-store";
@@ -60,6 +61,7 @@ export async function POST(req: Request) {
     stream: toUIMessageStream({
       stream: result.stream,
       originalMessages: messages,
+      onError: friendlyError,
       generateMessageId: createIdGenerator({ prefix: "msg", size: 16 }),
       onEnd: async ({ messages: finished }) => {
         try {
