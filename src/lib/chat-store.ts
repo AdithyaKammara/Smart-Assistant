@@ -1,7 +1,7 @@
 import type { UIMessage } from "ai";
 import type { Supabase } from "./supabase/server";
 
-export type ThreadSummary = { id: string; title: string };
+export type ThreadSummary = { id: string; title: string; updated_at: string };
 
 /** All queries run as the signed-in user, so row level security scopes them to their own rows. */
 export async function loadMessages(supabase: Supabase, threadId: string): Promise<UIMessage[]> {
@@ -17,7 +17,7 @@ export async function loadMessages(supabase: Supabase, threadId: string): Promis
 export async function listThreads(supabase: Supabase): Promise<ThreadSummary[]> {
   const { data, error } = await supabase
     .from("threads")
-    .select("id, title")
+    .select("id, title, updated_at")
     .order("updated_at", { ascending: false })
     .limit(50);
   if (error) throw error;
@@ -42,12 +42,14 @@ export async function saveChat(supabase: Supabase, threadId: string, messages: U
     .upsert({ id: threadId, title: titleFrom(messages), updated_at: new Date(now).toISOString() });
   if (threadError) throw threadError;
 
-  const rows = messages.map((m, i) => ({
+  // A failed reply (quota, network) can arrive with no content; don't keep an empty bubble.
+  const kept = messages.filter((m) => m.role !== "assistant" || hasContent(m));
+  const rows = kept.map((m, i) => ({
     id: m.id,
     thread_id: threadId,
     role: m.role,
     parts: m.parts,
-    created_at: new Date(now - (messages.length - i)).toISOString(),
+    created_at: new Date(now - (kept.length - i)).toISOString(),
   }));
   const { error } = await supabase.from("messages").upsert(rows, { onConflict: "id", ignoreDuplicates: true });
   if (error) throw error;
@@ -62,4 +64,11 @@ export async function consumeChatQuota(supabase: Supabase, maxPerHour: number): 
   const { data, error } = await supabase.rpc("consume_chat_quota", { max_per_hour: maxPerHour });
   if (error) throw error;
   return data === true;
+}
+
+/** True when an assistant message has text or a tool step worth showing. */
+export function hasContent(message: UIMessage): boolean {
+  return message.parts.some(
+    (p) => (p.type === "text" && "text" in p && p.text.trim().length > 0) || p.type.startsWith("tool-"),
+  );
 }
