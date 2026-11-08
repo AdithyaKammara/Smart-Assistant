@@ -82,11 +82,16 @@ function beforeDeadline<T>(promise: Promise<T>, deadline: number): Promise<T> {
  * left in the budget before it is appended.
  */
 export async function extractPdfText(bytes: Uint8Array): Promise<string> {
-  // ponytail: in-process with deadlines; move to a worker_thread with resourceLimits if uploads become hostile at scale.
+  // ponytail: in-process, with deadlines that destroy the pdf.js task; a worker_thread with resourceLimits would add a hard memory cap.
   const deadline = Date.now() + RAG_LIMITS.extractTimeoutMs;
   const max = RAG_LIMITS.maxTextChars;
   const { getDocumentProxy } = await import("unpdf");
-  const pdf = await beforeDeadline(getDocumentProxy(bytes), deadline);
+  const loading = getDocumentProxy(bytes);
+  const pdf = await beforeDeadline(loading, deadline).catch((error) => {
+    // Timed out while loading: destroy the document as soon as it does load.
+    loading.then((late) => late.loadingTask.destroy()).catch(() => {});
+    throw error;
+  });
 
   let text = "";
   try {
@@ -117,7 +122,8 @@ export async function extractPdfText(bytes: Uint8Array): Promise<string> {
       if (text.length < max) text += "\n\n".slice(0, max - text.length);
     }
   } finally {
-    await pdf.cleanup();
+    // destroy() aborts any pdf.js work still running (a timeout included) and frees the document.
+    await pdf.loadingTask.destroy().catch(() => {});
   }
   return text;
 }
