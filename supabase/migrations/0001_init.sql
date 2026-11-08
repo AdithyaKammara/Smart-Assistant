@@ -73,3 +73,40 @@ as $$
   order by c.embedding <=> query_embedding
   limit match_count;
 $$;
+
+-- Rate limiting. Users cannot read or write this table (RLS on, no policies);
+-- only consume_chat_quota, running as its owner, touches it. The advisory lock
+-- makes check-and-record atomic, so parallel requests cannot all slip through.
+create table public.chat_usage (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+create index chat_usage_user_id_created_at_idx on public.chat_usage (user_id, created_at);
+alter table public.chat_usage enable row level security;
+
+create or replace function public.consume_chat_quota(max_per_hour int)
+returns boolean
+language plpgsql volatile security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  used int;
+begin
+  if uid is null then
+    return false;
+  end if;
+  perform pg_advisory_xact_lock(hashtext(uid::text));
+  select count(*) into used from chat_usage
+    where user_id = uid and created_at > now() - interval '1 hour';
+  if used >= max_per_hour then
+    return false;
+  end if;
+  insert into chat_usage (user_id) values (uid);
+  return true;
+end;
+$$;
+
+revoke all on function public.consume_chat_quota(int) from public, anon;
+grant execute on function public.consume_chat_quota(int) to authenticated;

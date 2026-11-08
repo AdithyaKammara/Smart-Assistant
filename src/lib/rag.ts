@@ -5,7 +5,17 @@ import { embed, embedMany } from "ai";
 const EMBEDDING_MODEL = google.embedding("gemini-embedding-001");
 export const EMBEDDING_DIMENSIONS = 1536; // must match vector(1536) in the migration
 
-export const RAG_LIMITS = { maxFileBytes: 10 * 1024 * 1024, maxChunks: 400, chunkChars: 1200, overlapChars: 200 };
+export const RAG_LIMITS = {
+  maxFileBytes: 10 * 1024 * 1024,
+  maxPages: 300,
+  maxChunks: 400,
+  chunkChars: 1200,
+  overlapChars: 200,
+  /** Roughly what maxChunks can hold; extraction stops here. */
+  get maxTextChars() {
+    return this.maxChunks * (this.chunkChars - this.overlapChars);
+  },
+};
 
 /**
  * Splits text into overlapping chunks, breaking at paragraph or sentence ends
@@ -50,9 +60,24 @@ export async function embedQuery(query: string): Promise<number[]> {
   return embedding;
 }
 
+export class PdfTooLargeError extends Error {}
+
+/**
+ * Extracts text page by page, refusing PDFs over maxPages and stopping once
+ * maxTextChars is reached, so a huge PDF cannot exhaust memory or CPU.
+ */
 export async function extractPdfText(bytes: Uint8Array): Promise<string> {
-  const { extractText, getDocumentProxy } = await import("unpdf");
+  const { getDocumentProxy } = await import("unpdf");
   const pdf = await getDocumentProxy(bytes);
-  const { text } = await extractText(pdf, { mergePages: true });
-  return text;
+  if (pdf.numPages > RAG_LIMITS.maxPages) throw new PdfTooLargeError(`PDFs can have up to ${RAG_LIMITS.maxPages} pages`);
+
+  let text = "";
+  for (let n = 1; n <= pdf.numPages && text.length < RAG_LIMITS.maxTextChars; n++) {
+    const page = await pdf.getPage(n);
+    const content = await page.getTextContent();
+    text += content.items.map((item) => ("str" in item ? item.str : "")).join(" ") + "\n\n";
+    page.cleanup();
+  }
+  await pdf.cleanup();
+  return text.slice(0, RAG_LIMITS.maxTextChars);
 }

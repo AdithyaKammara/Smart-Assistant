@@ -10,7 +10,7 @@ import {
 import { LIMITS, SYSTEM_PROMPT } from "@/lib/ai/config";
 import { getChatModel } from "@/lib/ai/model";
 import { createTools } from "@/lib/ai/tools";
-import { loadMessages, recentUserMessageCount, saveChat } from "@/lib/chat-store";
+import { consumeChatQuota, loadMessages, saveChat } from "@/lib/chat-store";
 import { createClient } from "@/lib/supabase/server";
 import { parseChatRequest } from "@/lib/validation";
 
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   const parsed = parseChatRequest(body);
   if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
 
-  if ((await recentUserMessageCount(supabase)) >= LIMITS.messagesPerHour) {
+  if (!(await consumeChatQuota(supabase, LIMITS.messagesPerHour))) {
     return Response.json(
       { error: `You can send ${LIMITS.messagesPerHour} messages an hour. Try again later.` },
       { status: 429, headers: { "Retry-After": "600" } },

@@ -1,4 +1,4 @@
-import { chunkText, embedDocuments, extractPdfText, RAG_LIMITS } from "@/lib/rag";
+import { chunkText, embedDocuments, extractPdfText, PdfTooLargeError, RAG_LIMITS } from "@/lib/rag";
 import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 60;
@@ -22,6 +22,12 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Sign in required" }, { status: 401 });
 
+  // Reject oversized uploads before buffering the body (multipart adds a little overhead).
+  const declared = Number(req.headers.get("content-length") ?? 0);
+  if (!declared || declared > RAG_LIMITS.maxFileBytes + 64 * 1024) {
+    return Response.json({ error: "PDFs can be up to 10 MB" }, { status: 413 });
+  }
+
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
   if (!(file instanceof File)) return Response.json({ error: "Attach a PDF as 'file'" }, { status: 400 });
@@ -36,7 +42,8 @@ export async function POST(req: Request) {
   let text: string;
   try {
     text = await extractPdfText(bytes);
-  } catch {
+  } catch (error) {
+    if (error instanceof PdfTooLargeError) return Response.json({ error: error.message }, { status: 413 });
     return Response.json({ error: "Could not read that PDF" }, { status: 422 });
   }
   const chunks = chunkText(text).slice(0, RAG_LIMITS.maxChunks);

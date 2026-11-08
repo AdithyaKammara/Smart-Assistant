@@ -33,8 +33,9 @@ export async function proxy(request: NextRequest) {
     }
     return NextResponse.redirect(new URL("/login", request.url));
   }
-  if (user && pathname === "/login") {
-    return NextResponse.redirect(new URL("/", request.url));
+  // Signed in: / and /login both start a fresh chat. The thread row is created with its first message.
+  if (user && (pathname === "/" || pathname === "/login")) {
+    return NextResponse.redirect(new URL(`/chat/${crypto.randomUUID()}`, request.url));
   }
   return response;
 }

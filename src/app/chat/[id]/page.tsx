@@ -1,10 +1,19 @@
 import { notFound, redirect } from "next/navigation";
+import { Suspense } from "react";
 import { z } from "zod";
 import { Chat } from "@/components/chat";
 import { listThreads, loadMessages } from "@/lib/chat-store";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function ChatPage({ params }: PageProps<"/chat/[id]">) {
+export default function ChatPage({ params }: PageProps<"/chat/[id]">) {
+  return (
+    <Suspense fallback={<p className="p-8 text-sm text-muted">Loading your chat…</p>}>
+      <ChatLoader params={params} />
+    </Suspense>
+  );
+}
+
+async function ChatLoader({ params }: { params: PageProps<"/chat/[id]">["params"] }) {
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
 

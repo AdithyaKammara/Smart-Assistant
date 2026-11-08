@@ -53,14 +53,13 @@ export async function saveChat(supabase: Supabase, threadId: string, messages: U
   if (error) throw error;
 }
 
-/** Messages a user sent in the last hour, for rate limiting. */
-export async function recentUserMessageCount(supabase: Supabase): Promise<number> {
-  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count, error } = await supabase
-    .from("messages")
-    .select("id", { count: "exact", head: true })
-    .eq("role", "user")
-    .gte("created_at", since);
+/**
+ * Records one chat request against the user's hourly quota and says whether it
+ * is allowed. Runs in the database (consume_chat_quota) so users cannot edit
+ * the counter and parallel requests cannot race past it.
+ */
+export async function consumeChatQuota(supabase: Supabase, maxPerHour: number): Promise<boolean> {
+  const { data, error } = await supabase.rpc("consume_chat_quota", { max_per_hour: maxPerHour });
   if (error) throw error;
-  return count ?? 0;
+  return data === true;
 }
