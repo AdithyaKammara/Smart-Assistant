@@ -40,3 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 !.env.example
+
+# Hallmark working files
+.hallmark/
+
+# Playwright
+/test-results/
+/playwright-report/
