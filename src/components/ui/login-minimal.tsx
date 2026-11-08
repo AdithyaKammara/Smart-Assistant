@@ -73,7 +73,7 @@ export function LoginForm({ className, error, notice, pending, ...props }: Login
         >
           <div className="flex flex-col gap-2">
             <p className="font-display text-lg font-medium tracking-tight text-foreground">Riya</p>
-            <h1 className="font-display text-3xl font-normal leading-[1.04] tracking-[-0.035em] text-foreground">
+            <h1 className="font-display text-3xl font-semibold leading-tight tracking-[-0.025em] text-foreground">
               {copy.title}
             </h1>
             <p className="text-sm text-muted-foreground">{copy.lead}</p>

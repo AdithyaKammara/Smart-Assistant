@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { z } from "zod";
 import { Chat } from "@/components/chat";
+import { resolveModelId } from "@/lib/ai/model";
 import { listThreads, loadMessages } from "@/lib/chat-store";
 import { createClient } from "@/lib/supabase/server";
 
@@ -39,6 +40,7 @@ async function ChatLoader({ params }: { params: PageProps<"/chat/[id]">["params"
       threads={threads}
       documents={documents ?? []}
       email={user.email ?? ""}
+      model={resolveModelId().modelId}
     />
   );
 }

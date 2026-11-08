@@ -1,7 +1,7 @@
 import type { UIMessage } from "ai";
 import type { Supabase } from "./supabase/server";
 
-export type ThreadSummary = { id: string; title: string };
+export type ThreadSummary = { id: string; title: string; updated_at: string };
 
 /** All queries run as the signed-in user, so row level security scopes them to their own rows. */
 export async function loadMessages(supabase: Supabase, threadId: string): Promise<UIMessage[]> {
@@ -17,7 +17,7 @@ export async function loadMessages(supabase: Supabase, threadId: string): Promis
 export async function listThreads(supabase: Supabase): Promise<ThreadSummary[]> {
   const { data, error } = await supabase
     .from("threads")
-    .select("id, title")
+    .select("id, title, updated_at")
     .order("updated_at", { ascending: false })
     .limit(50);
   if (error) throw error;
