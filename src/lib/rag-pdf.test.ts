@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { extractPdfText, RAG_LIMITS } from "./rag";
 
 /** Builds a minimal one-page PDF whose page shows each line of text. */
-function makePdf(lines: string[]): Uint8Array {
-  const stream = lines.map((l, i) => `BT /F1 10 Tf 20 ${780 - i * 12} Td (${l}) Tj ET`).join("\n");
+function makePdf(lines: string[], fontSize = 10): Uint8Array {
+  const stream = lines.map((l, i) => `BT /F1 ${fontSize} Tf 20 ${780 - i * 12} Td (${l}) Tj ET`).join("\n");
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
@@ -33,6 +33,13 @@ describe("extractPdfText", () => {
   it("reads the text of a PDF", async () => {
     const text = await extractPdfText(makePdf(["Visitors use the network NW-Guest."]));
     expect(text).toContain("NW-Guest");
+  });
+
+  it("cuts a single long text item to the remaining budget", async () => {
+    RAG_LIMITS.maxChunks = 1; // budget: 1000 characters
+    // 1100 characters at 0.5pt fit on the page, so pdf.js returns them as one item.
+    const text = await extractPdfText(makePdf(["x".repeat(1100)], 0.5));
+    expect(text.length).toBe(1000);
   });
 
   it("stops inside a single page once the text budget is reached", async () => {

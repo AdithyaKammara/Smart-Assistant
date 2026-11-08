@@ -63,35 +63,49 @@ export async function embedQuery(query: string): Promise<number[]> {
 
 export class PdfTooLargeError extends Error {}
 
+/** Rejects if the promise has not settled by the deadline, so no single pdf.js step can stall the request. */
+function beforeDeadline<T>(promise: Promise<T>, deadline: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new PdfTooLargeError("That PDF took too long to read")),
+      Math.max(0, deadline - Date.now()),
+    );
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 /**
  * Extracts text page by page, refusing PDFs over maxPages and stopping once
  * maxTextChars is reached, so a huge PDF cannot exhaust memory or CPU.
+ * Every pdf.js step races the deadline, and each text item is cut to the room
+ * left in the budget before it is appended.
  */
 export async function extractPdfText(bytes: Uint8Array): Promise<string> {
-  const { getDocumentProxy } = await import("unpdf");
-  const pdf = await getDocumentProxy(bytes);
-  if (pdf.numPages > RAG_LIMITS.maxPages) throw new PdfTooLargeError(`PDFs can have up to ${RAG_LIMITS.maxPages} pages`);
-
-  // Budget checked inside each page's text stream, so one huge page cannot be read in full.
-  // ponytail: in-process with a deadline; move to a worker with a memory limit if uploads become hostile at scale.
+  // ponytail: in-process with deadlines; move to a worker_thread with resourceLimits if uploads become hostile at scale.
   const deadline = Date.now() + RAG_LIMITS.extractTimeoutMs;
+  const max = RAG_LIMITS.maxTextChars;
+  const { getDocumentProxy } = await import("unpdf");
+  const pdf = await beforeDeadline(getDocumentProxy(bytes), deadline);
+
   let text = "";
   try {
-    for (let n = 1; n <= pdf.numPages && text.length < RAG_LIMITS.maxTextChars; n++) {
-      const page = await pdf.getPage(n);
+    if (pdf.numPages > RAG_LIMITS.maxPages) throw new PdfTooLargeError(`PDFs can have up to ${RAG_LIMITS.maxPages} pages`);
+    for (let n = 1; n <= pdf.numPages && text.length < max; n++) {
+      const page = await beforeDeadline(pdf.getPage(n), deadline);
       const reader = page.streamTextContent().getReader();
       let finished = false;
       try {
-        while (text.length < RAG_LIMITS.maxTextChars) {
-          if (Date.now() > deadline) throw new PdfTooLargeError("That PDF took too long to read");
-          const { done, value } = await reader.read();
+        while (text.length < max) {
+          const { done, value } = await beforeDeadline(reader.read(), deadline);
           if (done) {
             finished = true;
             break;
           }
           for (const item of (value as { items: { str?: string }[] }).items) {
-            text += (item.str ?? "") + " ";
-            if (text.length >= RAG_LIMITS.maxTextChars) break;
+            const room = max - text.length;
+            if (room <= 0) break;
+            text += `${item.str ?? ""} `.slice(0, room);
           }
         }
       } finally {
@@ -100,10 +114,10 @@ export async function extractPdfText(bytes: Uint8Array): Promise<string> {
         if (!finished) reader.releaseLock();
         page.cleanup();
       }
-      text += "\n\n";
+      if (text.length < max) text += "\n\n".slice(0, max - text.length);
     }
   } finally {
     await pdf.cleanup();
   }
-  return text.slice(0, RAG_LIMITS.maxTextChars);
+  return text;
 }
